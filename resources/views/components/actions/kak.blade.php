@@ -1,18 +1,18 @@
 @php
-    $hasLaporan = $record->getMedia('laporan')->isNotEmpty();
+    $hasKak = $record->getMedia('kak')->isNotEmpty();
 @endphp
 
-@if($hasLaporan)
+@if($hasKak)
     {{-- Sudah upload --}}
     <div class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-lg ring-1 ring-inset ring-green-600/20">
         <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
         </svg>
-        <span>Laporan</span>
+        <span>KAK</span>
         <button
             wire:click="
                 mountAction(
-                    'uploadLaporan',
+                    'uploadKak',
                     {},
                     {
                         table: true,
@@ -42,11 +42,11 @@
                 }
             )
         "
-        class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg ring-1 ring-inset ring-blue-600/20 transition-all hover:shadow-sm"
+        class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg ring-1 ring-inset ring-purple-600/20 transition-all hover:shadow-sm"
     >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
-        <span>Upload Laporan</span>
+        <span>Upload KAK</span>
     </button>
 @endif
