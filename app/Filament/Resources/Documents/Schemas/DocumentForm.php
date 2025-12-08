@@ -5,13 +5,16 @@ namespace App\Filament\Resources\Documents\Schemas;
 use App\Enums\JenisRincian;
 use Dom\Text;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentForm
 {
@@ -19,11 +22,13 @@ class DocumentForm
     {
         return $schema
             ->components([
+                Hidden::make('created_by')
+                    ->default(Auth::user()->id),
                 Section::make('')
                     ->columnSpanFull()
                     ->schema([
                         Select::make('project_id')
-                            ->label('Project')
+                            ->label('Proyek')
                             ->relationship('project', 'name')
                             ->columns(2)
                             ->native(false)
@@ -47,32 +52,35 @@ class DocumentForm
                                     ->native(false)
                                     ->required(),
                             ]),
-                        TextInput::make('title')
-                            ->label('Title')
+                        Select::make('rincians')
+                            ->label('Rincian')
+                            ->relationship('rincians', 'name')
+                            ->preload()
+                            ->columnSpanFull()
+                            ->multiple()
+                            ->native(false)
+                            ->createOptionForm([
+                                TextInput::make('name')
+                                    ->label('Rincian Name'),
+                                Select::make('type')
+                                    ->label('Rincian Type')
+                                    ->options(JenisRincian::class),
+                                Toggle::make('is_active')
+                                    ->label('Is Active')
+                                    ->default(true),
+                            ]),
+
                     ]),
-                Select::make('rincians')
-                    ->label('Rincian')
-                    ->relationship('rincians', 'name')
-                    ->preload()
-                    ->columnSpanFull()
-                    ->multiple()
-                    ->native(false)
-                    ->createOptionForm([
-                        TextInput::make('name')
-                            ->label('Rincian Name'),
-                        Select::make('type')
-                            ->label('Rincian Type')
-                            ->options(JenisRincian::class),
-                        Toggle::make('is_active')
-                            ->label('Is Active')
-                            ->default(true),
-                    ]),
+                TextInput::make('document_number')
+                    ->label('Nomor Dokumen'),
                 Select::make('pic_id')
                     ->label('Penanggung Jawab')
                     ->relationship('pic', 'name')
                     ->preload()
-                    ->native(false)
-                    ->columnSpanFull()
+                    ->native(false),
+                Textarea::make('description')
+                    ->label('Keterangan')
+                    ->columnSpanFull(),
             ]);
     }
 }

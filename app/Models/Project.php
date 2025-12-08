@@ -25,8 +25,37 @@ class Project extends Model
         'end_date' => 'date',
     ];
 
-    // public function rincians()
-    // {
-    //     return $this->hasMany(Rincian::class);
-    // }
+    public function getProgressPercentageAttribute(): float
+    {
+        $documents = $this->documents;
+
+        if ($documents->isEmpty()) {
+            return 0;
+        }
+
+        $totalProgress = 0;
+
+        foreach ($documents as $document) {
+            $totalProgress += $document->progress_percentage;
+        }
+
+        return round($totalProgress / $documents->count(), 2);
+    }
+
+    public function getIsCompleteAttribute(): bool
+    {
+        $documents = $this->documents;
+
+        if ($documents->isEmpty()) {
+            return false;
+        }
+
+        foreach ($documents as $document) {
+            if (!$document->is_complete) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

@@ -62,6 +62,10 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn () => url(config('horizon.path')), shouldOpenInNewTab: true)
                     ->hidden(fn (Request $request) => ! $request->user()?->hasRole('super_admin')),
             ])
+            ->navigationGroups([
+                'Pendukung',
+                'Pengaturan',
+            ])
             ->font('Barlow')
             ->sidebarWidth('14rem')
             ->maxContentWidth('full')

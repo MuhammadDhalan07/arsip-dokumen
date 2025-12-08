@@ -42,28 +42,7 @@ class DocumentsTable
                             );
                         }
 
-                        $componentMap = [
-                            'panduan' => 'actions.panduan',
-                            'laporan' => 'actions.laporan',
-                            'kak' => 'actions.kak',
-                            'penawaran' => 'actions.penawaran',
-                            'permohonan pemeriksaan dan serah terima' => 'actions.permohonan-pemeriksaan-serah-terima',
-                            'permohonan pembayaran' => 'actions.permohonan-pembayaran',
-                            'rab' => 'actions.rab',
-                        ];
-
                         $components = '';
-
-                        // foreach ($rincians as $rincian) {
-                        //     $name = strtolower($rincian->name);
-
-                        //     if (isset($componentMap[$name])) {
-                        //         $components .= view(
-                        //             'components.'.$componentMap[$name],
-                        //             ['record' => $record, 'rincian' => $rincian]
-                        //         )->render();
-                        //     }
-                        // }
                         foreach ($rincians as $rincian) {
                             $components .= view(
                                 'components.actions.rincian-button',
@@ -94,11 +73,27 @@ class DocumentsTable
                     })
                     ->searchable()
                     ->sortable(),
-                // TextColumn::make('rincians.name')
-                //     ->label('Rincian')
-                //     ->badge()
-                //     ->separator(',')
-                //     ->searchable(),
+                TextColumn::make('progress_percentage')
+                    ->label('Progress')
+                    ->formatStateUsing(function ($state, Document $record) {
+                        $progress = $record->progress_percentage;
+                        $color = $record->progress_color;
+                        // dd($record->progress_percentage, $color);
+
+                        return new HtmlString("
+                            <div class='flex items-center gap-2'>
+                                <div class='flex-1 w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
+                                    <div class='bg-{$color}-600 h-2.5 rounded-full transition-all' style='width: {$progress}%'></div>
+                                </div>
+                                <span class='text-sm font-medium text-{$color}-700'>{$progress}%</span>
+                            </div>
+                        ");
+                    })
+                    ->html(),
+                TextColumn::make('progress_status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (Document $record) => $record->progress_color),
             ])
             ->filters([
                 TrashedFilter::make(),
@@ -155,11 +150,16 @@ class DocumentsTable
                 ])
                 ->action(function (array $data, Document $record) use ($collection, $rincian) {
 
-                    // $record->addMedia($data['file'])
-                    //     ->toMediaCollection($collection);
+                    $record->rincians()->updateExistingPivot($rincian->id, [
+                        'is_completed' => true,
+                        'completed_at' => now(),
+                    ]);
+
+                    $progress = $record->progress_percentage;
 
                     Notification::make()
                         ->title("{$rincian->name} berhasil diunggah")
+                        ->body("Progress: {$progress}%")
                         ->success()
                         ->send();
                 });

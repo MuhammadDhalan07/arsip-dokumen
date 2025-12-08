@@ -14,9 +14,7 @@ return new class extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->foreignUlid('project_id')->nullable()->index();
-            // $table->foreignUlid('rincian_id')->nullable()->index();
             $table->foreignUlid('pic_id')->nullable()->index();
-            $table->string('title');
             $table->string('document_number')->nullable();
             $table->string('status')->nullable();
             $table->text('description')->nullable();
