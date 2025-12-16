@@ -6,6 +6,7 @@ use App\Enums\JenisRincian;
 use App\Filament\Resources\Rincian\Pages\ManageRincian;
 use App\Models\Rincian;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -52,7 +53,7 @@ class RincianResource extends Resource
                     ->columnSpanFull()
                     ->schema([
                         TextInput::make('name')
-                            ->label('Rincian Name'),
+                            ->label('Nama Dokumen Rincian'),
                         TextInput::make('bobot')
                             ->label('Bobot (%)')
                             ->numeric()
@@ -97,6 +98,10 @@ class RincianResource extends Resource
                     ->label('Tipe'),
             ])
             ->defaultGroup('type')
+            ->recordClasses(fn (Rincian $record) => match ($record->type) {
+                JenisRincian::EKSTERNAL => 'bg-blue-50 dark:bg-blue-900',
+                JenisRincian::INTERNAL => 'bg-green-50 dark:bg-green-900',
+            })
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
@@ -106,14 +111,17 @@ class RincianResource extends Resource
                     ->formatStateUsing(fn ($state) => "{$state}%")
                     ->sortable(),
                 ToggleColumn::make('is_active')
+                    ->label('Aktif')
                     ->sortable(),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
