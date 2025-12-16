@@ -71,6 +71,7 @@ class AdminPanelProvider extends PanelProvider
             ->maxContentWidth('full')
             ->spa()
             ->renderHook(PanelsRenderHook::RESOURCE_PAGES_LIST_RECORDS_TABLE_BEFORE, fn (): View => view('components.total-records'))
+            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn ()  => view('components.select-tahun'))
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->renderHook(PanelsRenderHook::STYLES_BEFORE, fn (): string => Blade::render(<<<'HTML'
                 <style>
@@ -130,6 +131,7 @@ class AdminPanelProvider extends PanelProvider
                     }
                 })::make(new FilamentLogViewer),
             ])
+            ->globalSearch(false)
             ->authMiddleware([
                 Authenticate::class,
             ]);
