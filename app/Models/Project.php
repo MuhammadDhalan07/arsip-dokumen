@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasTahunAktif;
 use App\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Project extends Model
 {
     use HasUlids, SoftDeletes;
+    use HasTahunAktif;
+    
     protected $table = 'projects';
 
     protected $fillable = [

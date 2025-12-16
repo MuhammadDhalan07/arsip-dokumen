@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\Projects\Schemas;
 
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class ProjectForm
@@ -13,14 +17,27 @@ class ProjectForm
     {
         return $schema
             ->components([
+                Hidden::make('year'),
                 TextInput::make('name')
-                    ->label('Project Name'),
-                Textarea::make('description')
-                    ->label('Project Description'),
+                    ->label('Nama Proyek')
+                    ->columnSpanFull()
+                    ->required(),
                 DatePicker::make('start_date')
-                    ->label('Start Date'),
+                    ->label('Tanggal Mulai')
+                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('year', Carbon::parse($state)->year))
+                    ->live()
+                    ->displayFormat('d F Y')
+                    ->native(false)
+                    ->columns(2)
+                    ->required(),
                 DatePicker::make('end_date')
-                    ->label('End Date'),
+                    ->label('Tanggal Selesai')
+                    ->displayFormat('d F Y')
+                    ->native(false)
+                    ->columns(2),
+                Textarea::make('description')
+                    ->label('Deskripsi')
+                    ->columnSpanFull(),
             ]);
     }
 }
