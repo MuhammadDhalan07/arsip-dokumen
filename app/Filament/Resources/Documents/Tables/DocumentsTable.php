@@ -28,6 +28,7 @@ class DocumentsTable
         $allRincian = Rincian::all();
 
         return $table
+            ->modifyQueryUsing(fn ( $query) =>$query->tahunAktif())
             ->columns([
                 TextColumn::make('project.name')
                     ->label('Project')
@@ -136,6 +137,8 @@ class DocumentsTable
                         ->downloadable()
                         ->hint('*Ukuran file maksimum: 10MB. Format yang diizinkan: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG.')
                         ->maxSize(10240)
+                        ->multiple()
+                        ->panelLayout('grid')
                         ->acceptedFileTypes([
                             'application/pdf',
                             'application/msword',
@@ -149,6 +152,10 @@ class DocumentsTable
                         ->required(),
                 ])
                 ->action(function (array $data, Document $record) use ($collection, $rincian) {
+                    $mediaCollectionName = $collection;
+                    foreach (data_get($data, $mediaCollectionName, []) as $key => $file) {
+                        $record->addMedia($file)->toMediaCollection($mediaCollectionName);
+                    }
 
                     $record->rincians()->updateExistingPivot($rincian->id, [
                         'is_completed' => true,

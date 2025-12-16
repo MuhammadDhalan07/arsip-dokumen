@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasTahunAktif;
 use App\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,6 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class Document extends Model implements HasMedia
 {
     use HasUlids, SoftDeletes, InteractsWithMedia;
+    use HasTahunAktif;
 
     protected $table = 'documents';
 
@@ -23,6 +25,7 @@ class Document extends Model implements HasMedia
         'status',
         'description',
         'created_by',
+        'year',
         'meta',
     ];
 

@@ -23,7 +23,10 @@ class DocumentForm
         return $schema
             ->components([
                 Hidden::make('created_by')
-                    ->default(Auth::user()->id),
+                    ->default(Auth::user()->id)
+                    ->dehydrated(),
+                Hidden::make('year')
+                    ->dehydrated(),
                 Section::make('')
                     ->columnSpanFull()
                     ->schema([
@@ -33,9 +36,16 @@ class DocumentForm
                             ->columns(2)
                             ->native(false)
                             ->preload()
-                            ->afterStateUpdated(fn (Set $set, $state) =>
-                                $set('title', $state ? \App\Models\Project::find($state)?->name ?? '' : '')
-                            )
+                            ->afterStateUpdated(function (Set $set, ?string $state) {
+                                if ($state) {
+                                    $project = \App\Models\Project::select('id', 'start_date')
+                                        ->find($state);
+
+                                    if ($project && $project->start_date) {
+                                        $set('year', $project->start_date->format('Y'));
+                                    }
+                                }
+                            })
                             ->live()
                             ->createOptionForm([
                                 TextInput::make('name')
@@ -71,12 +81,11 @@ class DocumentForm
                             ]),
 
                     ]),
-                TextInput::make('document_number')
-                    ->label('Nomor Dokumen'),
                 Select::make('pic_id')
                     ->label('Penanggung Jawab')
                     ->relationship('pic', 'name')
                     ->preload()
+                    ->columnSpanFull()
                     ->native(false),
                 Textarea::make('description')
                     ->label('Keterangan')
