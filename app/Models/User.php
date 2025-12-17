@@ -8,6 +8,7 @@ use App\Concerns\HasUlids;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -43,6 +44,11 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'remember_token',
     ];
+
+    public function project(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_kontributor', 'kontributor_id', 'project_id');
+    }
 
     /**
      * Get the attributes that should be cast.

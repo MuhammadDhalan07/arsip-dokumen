@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('instansi_id')->nullable()->index();
+            $table->foreignUlid('organization_id')->nullable()->index();
             $table->smallInteger('year')->nullable();
             $table->string('name')->nullable();
 
