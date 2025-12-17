@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('media', function (Blueprint $table) {
-            $table->string('model_id')->change();
+        Schema::create('project_kontributor', function (Blueprint $table) {
+            $table->id();
+            $table->foreignUlid('project_id')->nullable()->index();
+            $table->foreignUlid('kontributor_id')->nullable()->index();
+            $table->timestamps();
         });
     }
 
@@ -21,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        
+        Schema::dropIfExists('project_kontributor');
     }
 };

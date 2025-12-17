@@ -15,6 +15,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->string('name')->nullable();
             $table->string('type')->nullable();
+            $table->decimal('bobot', 5, 2)->nullable()->default(0)->comment('Bobot dalam persen (0-100)');
             $table->boolean('is_active')->nullable();
             $table->timestamps();
         });

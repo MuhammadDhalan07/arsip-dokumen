@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignUlid('document_id')->nullable()->constrained('documents')->cascadeOnDelete();
             $table->foreignUlid('rincian_id')->nullable()->constrained('rincians')->cascadeOnDelete();
+            $table->boolean('is_completed')->default(false);
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
     }

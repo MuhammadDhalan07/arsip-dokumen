@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('rincians', function (Blueprint $table) {
-            $table->decimal('bobot', 5, 2)->nullable()->default(0)->after('type')
-                ->comment('Bobot dalam persen (0-100)');
+        Schema::create('taxes', function (Blueprint $table) {
+            $table->id();
+            $table->smallInteger('pph')->nullable();
+            $table->smallInteger('ppn')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -22,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('rincians', function (Blueprint $table) {
-            $table->dropColumn('bobot');
-        });
+        Schema::dropIfExists('taxes');
     }
 };

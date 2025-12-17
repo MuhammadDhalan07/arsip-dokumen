@@ -13,9 +13,21 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->string('name')->nullable();
-            $table->string('code')->unique()->nullable();
+            $table->foreignUlid('instansi_id')->nullable()->index();
             $table->smallInteger('year')->nullable();
+            $table->string('name')->nullable();
+
+            $table->double('nilai_kontrak')->nullable();
+            $table->double('nilai_dpp')->nullable();
+            $table->double('nilai_ppn')->nullable();
+            $table->double('nilai_pph')->nullable();
+
+            $table->string('billing_ppn')->nullable();
+            $table->string('billing_pph')->nullable();
+            $table->double('ntpn_ppn')->nullable();
+            $table->double('ntpn_pph')->nullable();
+
+            $table->string('type')->nullable();
             $table->text('description')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();

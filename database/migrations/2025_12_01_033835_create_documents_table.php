@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->ulid('id')->primary();
+            $table->smallInteger('year')->index()->nullable();
             $table->foreignUlid('project_id')->nullable()->index();
             $table->foreignUlid('pic_id')->nullable()->index();
             $table->string('document_number')->nullable();
