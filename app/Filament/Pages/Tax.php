@@ -27,7 +27,7 @@ class Tax extends Page implements HasSchemas
     protected static ?string $recordTitleAttribute = 'Pajak';
 
     protected static ?string $modelLabel = 'Pajak';
-    
+
     protected static ?string $title = 'Pajak';
 
     protected static ?string $pluralModelLabel = 'Pajak';
@@ -46,6 +46,7 @@ class Tax extends Page implements HasSchemas
 
         $this->form->fill([
             'pph' => $tax?->pph ?? 0,
+            'ppn' => $tax?->ppn ?? 0
         ]);
     }
 
@@ -63,7 +64,15 @@ class Tax extends Page implements HasSchemas
                                     ->numeric()
                                     ->suffix('%')
                                     ->maxWidth('sm')
-                        ])
+                            ]),
+                        Tabs\Tab::make('PPN')
+                            ->schema([
+                                TextInput::make('ppn')
+                                    ->disableLabel()
+                                    ->numeric()
+                                    ->suffix('%')
+                                    ->maxWidth('sm')
+                            ]),
                     ])
             ])->statePath('data');
     }
