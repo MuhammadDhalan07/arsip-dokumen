@@ -19,7 +19,9 @@ return new class extends Migration
 
             $table->double('nilai_kontrak')->nullable();
             $table->double('nilai_dpp')->nullable();
+            $table->double('ppn')->nullable();
             $table->double('nilai_ppn')->nullable();
+            $table->double('pph')->nullable();
             $table->double('nilai_pph')->nullable();
 
             $table->string('billing_ppn')->nullable();
