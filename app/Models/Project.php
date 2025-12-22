@@ -25,6 +25,8 @@ class Project extends Model
 
         'nilai_kontrak',
         'nilai_dpp',
+        'ppn',
+        'pph',
         'nilai_ppn',
         'nilai_pph',
         'billing_ppn',
@@ -48,7 +50,7 @@ class Project extends Model
         return $this->belongsTo(Organization::class, 'organization_id');
     }
 
-    public function projectContributor(): BelongsToMany
+    public function projectContributors(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_kontributor', 'project_id', 'kontributor_id');
     }
