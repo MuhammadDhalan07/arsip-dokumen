@@ -3,7 +3,7 @@
         <form wire:submit='submit'>
             {{ $this->form }}
 
-            <div class="mt-6 pt-6">
+            <div class="mt-6">
                 <x-filament::button type="submit">
                     Simpan
                 </x-filament::button>
