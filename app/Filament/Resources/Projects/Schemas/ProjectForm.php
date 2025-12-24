@@ -132,8 +132,8 @@ class ProjectForm
                             ->label('DPP')
                             ->prefix('Rp')
                             ->columnSpan(2)
-                            ->dehydrated()
                             ->disabled()
+                            ->dehydrated()
                             ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', '.') : '0')
                             ->numeric(),
                     ]),
