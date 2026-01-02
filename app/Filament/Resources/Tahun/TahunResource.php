@@ -23,7 +23,7 @@ class TahunResource extends Resource
 {
     protected static ?string $model = Tahun::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'carbon-calendar-settings';
 
     protected static string|UnitEnum|null $navigationGroup = 'Pengaturan';
 
