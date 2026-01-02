@@ -26,6 +26,9 @@ class ProjectsTable
                     ->label('Nama Proyek')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('type')
+                    ->label('Tipe Proyek')
+                    ->searchable(),
                 TextColumn::make('start_date')
                     ->label('Tanggal Mulai')
                     ->date('d F Y')

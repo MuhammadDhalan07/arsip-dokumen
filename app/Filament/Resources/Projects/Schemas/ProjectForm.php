@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Projects\Schemas;
 
 use App\Enums\JenisOrganization;
+use App\Enums\JenisProject;
 use App\Models\Tax;
 use Carbon\Carbon;
 use Dom\Text;
@@ -28,6 +29,12 @@ class ProjectForm
                 Hidden::make('year'),
                 TextInput::make('name')
                     ->label('Nama Proyek')
+                    ->columnSpanFull()
+                    ->required(),
+                Select::make('type')
+                    ->label('Tipe Proyek')
+                    ->options(JenisProject::class)
+                    ->native(false)
                     ->columnSpanFull()
                     ->required(),
                 Select::make('organization_id')
@@ -91,51 +98,52 @@ class ProjectForm
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Set $set, Get $get) => self::updateCalculations($set, $get))
                             ->numeric()
-                            ->mask(RawJs::make(<<<'JS'
-                                $money($input, ',', '.')
-                            JS))
-                            ->stripCharacters(['.', ','])
-                            ->required(),
+                            ->stripCharacters(',')
+                            ->required()
+                            ->placeholder('1000000')
+                            ->helperText('Ketik angka saja, tanpa titik atau koma.'),
+
                         TextInput::make('ppn')
                             ->label('PPN')
                             ->maxWidth('sm')
                             ->numeric()
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Set $set, Get $get) => self::updateCalculations($set, $get))
-                            ->default(fn () => Tax::first()->ppn ?? 0)
+                            ->default(fn () => Tax::first()?->ppn ?? 0)
                             ->suffix('%'),
+
                         TextInput::make('nilai_ppn')
                             ->label('Nilai PPN')
                             ->disabled()
                             ->dehydrated()
                             ->columnSpan(2)
                             ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', '.') : '0')
-                            ->numeric()
                             ->prefix('Rp'),
+
                         TextInput::make('pph')
                             ->label('PPH')
                             ->maxWidth('sm')
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Set $set, Get $get) => self::updateCalculations($set, $get))
                             ->numeric()
-                            ->default(fn () => Tax::first()->pph ?? 0)
+                            ->default(fn () => Tax::first()?->pph ?? 0)
                             ->suffix('%'),
+
                         TextInput::make('nilai_pph')
-                            ->label('Nilai PPN')
+                            ->label('Nilai PPH')
                             ->disabled()
                             ->dehydrated()
                             ->columnSpan(2)
                             ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', '.') : '0')
-                            ->numeric()
                             ->prefix('Rp'),
+
                         TextInput::make('nilai_dpp')
                             ->label('DPP')
                             ->prefix('Rp')
                             ->columnSpan(2)
                             ->disabled()
                             ->dehydrated()
-                            ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', '.') : '0')
-                            ->numeric(),
+                            ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', '.') : '0'),
                     ]),
                 Section::make('')
                     ->columns(4)
@@ -166,16 +174,16 @@ class ProjectForm
 
     protected static function updateCalculations(Set $set, Get $get): void
     {
-        $nilaiKontrak = (float) str_replace(',', '', $get('nilai_kontrak') ?? 0);
-        $ppnPersen = (float) $get('ppn') ?? 0;
-        $pphPersen = (float) $get('pph') ?? 0;
+        $nilaiKontrak = (float) ($get('nilai_kontrak') ?? 0);
+        $ppnPersen = (float) ($get('ppn') ?? 0);
+        $pphPersen = (float) ($get('pph') ?? 0);
 
 
         $nilaiPpn = $nilaiKontrak * ($ppnPersen / 100);
 
         $nilaiPph = $nilaiKontrak * ($pphPersen / 100);
 
-        $dpp = $nilaiKontrak - $ppnPersen;
+        $dpp = $nilaiKontrak - $nilaiPpn;
 
         $set('nilai_dpp', round($dpp, 2));
         $set('nilai_ppn', round($nilaiPpn, 2));
