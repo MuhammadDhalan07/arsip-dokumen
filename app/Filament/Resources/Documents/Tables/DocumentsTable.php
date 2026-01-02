@@ -7,6 +7,7 @@ use App\Models\Rincian;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
@@ -103,6 +104,7 @@ class DocumentsTable
                 ActionGroup::make([
                     EditAction::make(),
                     ...self::getActionUpload($allRincian),
+                    DeleteAction::make(),
                 ]),
             ])
             ->toolbarActions([
