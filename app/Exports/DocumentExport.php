@@ -2,121 +2,59 @@
 
 namespace App\Exports;
 
-use App\Models\Document;
+use App\Exports\Sheets\DocumentCategorySheet;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithDefaultStyles;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use PhpOffice\PhpSpreadsheet\Style\Style;
 
-class DocumentExport implements FromCollection, WithStyles, WithColumnWidths, WithColumnFormatting
+class DocumentExport implements WithMultipleSheets, WithDefaultStyles
 {
     use Exportable;
 
-    protected int $maxRowData;
+    protected Collection $documents;
 
-    protected Collection $document;
-
-    protected Collection $records;
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-
-    public static function make(Collection $document)
+    public static function make(Collection $documents)
     {
-        $name = Str::of('rekap')->append('.xlsx');
+        $name = Str::of('rekap-' . now()->format('Y-m-d-His'))->append('.xlsx');
         $format = \Maatwebsite\Excel\Excel::XLSX;
 
-        return app(static::class)->setUp($document)->download($name, $format);
+        return app(static::class)->setUp($documents)->download($name, $format);
     }
 
-    public function setUp(Collection $document): self
+    public function setUp(Collection $documents): self
     {
-        $this->document = $document;
-        $this->records = collect();
-        // $this->maxRowData = $document->count() + 1;
-
-
-
-        // dd($document);
-        foreach ($document as $index => $doc) {
-            $this->records->push([
-                ['Rekapitulasi Dokumen'],
-                [],
-                [
-                    'No',
-                    'Nama Proyek',
-                    'Instansi',
-                    'Nilai Kontrak',
-                    'DPP',
-                    'PPN ('. $doc->project->ppn . '%)',
-                    'PPH ('. $doc->project->pph . '%)',
-                    'Billing PPN',
-                    'Billing PPH',
-                    'NTPN PPN',
-                    'NTPN PPH',
-                    'Deskripsi',
-                ]
-            ]);
-            $this->records->push([
-                $index + 1,
-                $doc->project->name,
-                $doc->project->organizations->nama_organization,
-                $doc->project->nilai_kontrak,
-                $doc->project->nilai_dpp,
-                $doc->project->nilai_ppn,
-                $doc->project->nilai_pph,
-                $doc->project->billing_ppn,
-                $doc->project->billing_pph,
-                $doc->project->ntpn_ppn,
-                $doc->project->ntpn_pph,
-                $doc->description,
-            ]);
-        }
-
+        $this->documents = $documents;
         return $this;
     }
 
-    public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+    public function sheets(): array
     {
-        return [];
+        $sheets = [];
+
+        $grouped = $this->documents->groupBy(function ($item) {
+            return $item->project?->type?->value;
+        });
+
+        foreach ($grouped as $category => $documents) {
+            $sheets[] = new DocumentCategorySheet($category, $documents);
+        }
+
+        return $sheets;
     }
 
-    public function columnWidths(): array
+    public function defaultStyles(Style $defaultStyle)
     {
         return [
-            'A' => 5,
-            'B' => 30,
-            'C' => 50,
-            'D' => 20,
-            'E' => 20,
-            'F' => 20,
-            'G' => 20,
-            'H' => 20,
-            'I' => 20,
-            'J' => 20,
-            'K' => 50,
-            'L' => 20,
-            'M' => 20,
-            'N' => 50,
+            'alignment' => [
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'font' => [
+                'name' => 'Times New Roman',
+                'size' => 11,
+            ],
         ];
-    }
-
-    public function columnFormats(): array
-    {
-        return [
-            'D' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
-            'E' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
-            'F' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
-            'G' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
-        ];
-    }
-
-
-    public function collection()
-    {
-        return $this->records;
     }
 }
