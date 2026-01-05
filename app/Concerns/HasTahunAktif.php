@@ -14,9 +14,9 @@ trait HasTahunAktif
         });
     }
 
-    public function scopeTahunAktif(Builder $query)
+    public function scopeTahunAktif(Builder $query): void
     {
-        $table = $this->getTable();
         $tahun = ArsipDokumen::tahunAktif();
+        $query->where('year', $tahun);
     }
 }
