@@ -50,10 +50,12 @@ class DocumentExport implements WithMultipleSheets, WithDefaultStyles
         return [
             'alignment' => [
                 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'wrapText' => true,
             ],
             'font' => [
                 'name' => 'Times New Roman',
-                'size' => 11,
+                'size' => 12,
             ],
         ];
     }

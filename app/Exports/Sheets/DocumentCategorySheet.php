@@ -17,12 +17,19 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, WithColumnWidths, WithColumnFormatting, WithHeadings
 {
     protected string $category;
+
     protected Collection $documents;
+
+    protected int $maxRowData = 0;
+
+    protected string $lastColumn = 'N';
+
 
     public function __construct(string $category, Collection $documents)
     {
         $this->category = $category;
         $this->documents = $documents;
+        $this->maxRowData = $documents->count() + 1;
     }
 
     public function title(): string
@@ -36,18 +43,15 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
 
     private function getFriendlyName(string $category): string
     {
-        $mapping = [
-            'konsultan' => 'Konsultan',
-            'pengadaan_barang' => 'Pengadaan Barang',
-            'pengadaan_jasa' => 'Pengadaan Jasa',
-            'konstruksi' => 'Konstruksi',
-            'pekerjaan_konstruksi' => 'Pekerjaan Konstruksi',
-            'jasa_konsultansi' => 'Jasa Konsultansi',
-            'jasa_lainnya' => 'Jasa Lainnya',
-            'uncategorized' => 'Tidak Ada Kategori',
-        ];
-
-        return $mapping[$category] ?? ucwords(str_replace('_', ' ', $category));
+        try {
+            $enum = \App\Enums\JenisProject::from($category);
+            return $enum->getLabel();
+        } catch (\ValueError $e) {
+            if ($category === 'uncategorized') {
+                return 'Tidak Ada Kategori';
+            }
+            return ucwords(str_replace('_', ' ', $category));
+        }
     }
 
     public function headings(): array
@@ -58,9 +62,9 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
             'Instansi',
             'Nilai Kontrak',
             'DPP',
-            'Rate PPN',
+            'Rate PPN %',
             'Nilai PPN',
-            'Rate PPH',
+            'Rate PPH %',
             'Nilai PPH',
             'Billing PPN',
             'Billing PPH',
@@ -74,8 +78,18 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
     {
         $records = collect();
 
+        $totalKontrak = 0;
+        $totalDPP = 0;
+        $totalPPN = 0;
+        $totalPPH = 0;
+
         foreach ($this->documents as $index => $doc) {
             $project = $doc->project;
+
+            $totalKontrak += $project?->nilai_kontrak ?? 0;
+            $totalDPP += $project?->nilai_dpp ?? 0;
+            $totalPPN += $project?->nilai_ppn ?? 0;
+            $totalPPH += $project?->nilai_pph ?? 0;
 
             $records->push([
                 $index + 1,
@@ -93,38 +107,38 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
                 $project?->ntpn_pph ?? '-',
                 $doc->description ?? '-',
             ]);
-
-            // $records->push([
-            //     $index + 1,
-            //     $doc->project->name,
-            //     $doc->project->organizations->nama_organization,
-            //     $doc->project->nilai_kontrak,
-            //     $doc->project->nilai_dpp,
-            //     $doc->project->ppn,
-            //     $doc->project->nilai_ppn,
-            //     $doc->project->pph,
-            //     $doc->project->nilai_pph,
-            //     $doc->project->billing_ppn,
-            //     $doc->project->billing_pph,
-            //     $doc->project->ntpn_ppn,
-            //     $doc->project->ntpn_pph,
-            //     $doc->description,
-            // ]);
         }
+
+        $records->push([
+            '',
+            'TOTAL',
+            '',
+            $totalKontrak,
+            $totalDPP,
+            '',
+            $totalPPN,
+            '',
+            $totalPPH,
+            '', '', '', '', ''
+        ]);
+        $this->maxRowData = $records->count() + 1;
 
         return $records;
     }
 
     public function styles(Worksheet $sheet)
     {
-        $lastRow = $this->documents->count() + 1;
+        // $maxRowData = $this->maxRowData;
+        $lastRow = $this->maxRowData;
+        $lastColumn = $this->lastColumn;
+        $totalRow = $lastRow;
 
         return [
             1 => [
-                'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => 'FFFFFF']],
+                'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => '000000']],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '4472C4']
+                    'startColor' => ['rgb' => 'FFD700']
                 ],
                 'alignment' => [
                     'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -137,26 +151,20 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
                     ]
                 ]
             ],
-            "2:{$lastRow}" => [
+            "A1:{$lastColumn}{$totalRow}" => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['rgb' => 'CCCCCC']
                     ]
                 ]
             ],
-            'I:I' => [
+            "A{$totalRow}:{$lastColumn}{$totalRow}" => [
+                'font' => ['bold' => true, 'size' => 12],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'FFF2CC']
-                ],
-            ],
-            'K:K' => [
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'FCE4D6']
-                ],
-            ],
+                    'startColor' => ['rgb' => 'FFD700']
+                ]
+            ]
         ];
     }
 
@@ -166,30 +174,37 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
             'A' => 5,
             'B' => 20,
             'C' => 30,
-            'D' => 35,
-            'E' => 15,
-            'F' => 10,
-            'G' => 18,
+            'D' => 30,
+            'E' => 30,
+            'F' => 18,
+            'G' => 30,
             'H' => 18,
-            'I' => 12,
-            'J' => 18,
-            'K' => 12,
-            'L' => 18,
-            'M' => 20,
-            'N' => 20,
-            'O' => 20,
-            'P' => 20,
-            'Q' => 40,
+            'I' => 30,
+            'J' => 30,
+            'K' => 30,
+            'L' => 30,
+            'M' => 30,
+            'N' => 30,
         ];
     }
 
     public function columnFormats(): array
     {
         return [
+            'D' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
+            'E' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
             'G' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
-            'H' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
-            'J' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
-            'L' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
+            'I' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)',
         ];
+    }
+
+    public function maxRows(): int
+    {
+        return $this->documents->count();
+    }
+
+    public function getMaxrowData(): ?int
+    {
+        return $this->maxRowData;
     }
 }
