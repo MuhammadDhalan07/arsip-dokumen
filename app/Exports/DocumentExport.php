@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithDefaultStyles;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\Style\Style;
 
-class DocumentExport implements WithMultipleSheets, WithDefaultStyles
+class DocumentExport implements WithDefaultStyles, WithMultipleSheets
 {
     use Exportable;
 
@@ -18,7 +18,7 @@ class DocumentExport implements WithMultipleSheets, WithDefaultStyles
 
     public static function make(Collection $documents)
     {
-        $name = Str::of('rekap-' . now()->format('Y-m-d-His'))->append('.xlsx');
+        $name = Str::of('rekap-'.now()->format('Y-m-d-His'))->append('.xlsx');
         $format = \Maatwebsite\Excel\Excel::XLSX;
 
         return app(static::class)->setUp($documents)->download($name, $format);
@@ -27,11 +27,16 @@ class DocumentExport implements WithMultipleSheets, WithDefaultStyles
     public function setUp(Collection $documents): self
     {
         $this->documents = $documents;
+
         return $this;
     }
 
     public function sheets(): array
     {
+        if ($this->documents->isEmpty()) {
+            return [];
+        }
+
         $sheets = [];
 
         $grouped = $this->documents->groupBy(function ($item) {

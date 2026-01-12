@@ -4,17 +4,17 @@ namespace App\Exports\Sheets;
 
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, WithColumnWidths, WithColumnFormatting, WithHeadings
+class DocumentCategorySheet implements FromCollection, WithColumnFormatting, WithColumnWidths, WithHeadings, WithStyles, WithTitle
 {
     protected string $category;
 
@@ -23,7 +23,6 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
     protected int $maxRowData = 0;
 
     protected string $lastColumn = 'N';
-
 
     public function __construct(string $category, Collection $documents)
     {
@@ -45,11 +44,13 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
     {
         try {
             $enum = \App\Enums\JenisProject::from($category);
+
             return $enum->getLabel();
         } catch (\ValueError $e) {
             if ($category === 'uncategorized') {
                 return 'Tidak Ada Kategori';
             }
+
             return ucwords(str_replace('_', ' ', $category));
         }
     }
@@ -91,10 +92,12 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
             $totalPPN += $project?->nilai_ppn ?? 0;
             $totalPPH += $project?->nilai_pph ?? 0;
 
+            $namaOrganization = $project?->organizations?->nama_organization ?? '-';
+
             $records->push([
                 $index + 1,
                 $project?->name ?? '-',
-                $project->organizations->nama_organization ?? '-',
+                $namaOrganization,
                 $project?->nilai_kontrak ?? 0,
                 $project?->nilai_dpp ?? 0,
                 ($project?->ppn ?? 0),
@@ -119,7 +122,7 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
             $totalPPN,
             '',
             $totalPPH,
-            '', '', '', '', ''
+            '', '', '', '', '',
         ]);
         $this->maxRowData = $records->count() + 1;
 
@@ -138,7 +141,7 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
                 'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => '000000']],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'FFD700']
+                    'startColor' => ['rgb' => 'FFD700'],
                 ],
                 'alignment' => [
                     'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -147,24 +150,24 @@ class DocumentCategorySheet implements FromCollection, WithTitle, WithStyles, Wi
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['rgb' => '000000']
-                    ]
-                ]
+                        'color' => ['rgb' => '000000'],
+                    ],
+                ],
             ],
             "A1:{$lastColumn}{$totalRow}" => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
-                    ]
-                ]
+                    ],
+                ],
             ],
             "A{$totalRow}:{$lastColumn}{$totalRow}" => [
                 'font' => ['bold' => true, 'size' => 12],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'FFD700']
-                ]
-            ]
+                    'startColor' => ['rgb' => 'FFD700'],
+                ],
+            ],
         ];
     }
 
