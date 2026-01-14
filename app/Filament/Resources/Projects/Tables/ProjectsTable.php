@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\Projects\Tables;
 
-use Dom\Text;
-use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -20,7 +18,16 @@ class ProjectsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->tahunAktif())
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->tahunAktif()
+                ->orderByRaw('
+                    CASE 
+                        WHEN end_date < CURRENT_DATE THEN 1
+                        ELSE 2
+                    END
+                ')
+                ->orderBy('end_date', 'asc')
+            )
             ->columns([
                 TextColumn::make('name')
                     ->label('Nama Proyek')
@@ -37,6 +44,10 @@ class ProjectsTable
                     ->label('Tanggal Selesai')
                     ->date('d F Y')
                     ->sortable(),
+                TextColumn::make('status_badge.label')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn ($record) => $record->status_badge['color']),
                 TextColumn::make('description')
                     ->label('Deskripsi')
                     ->limit(50)
@@ -51,7 +62,7 @@ class ProjectsTable
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

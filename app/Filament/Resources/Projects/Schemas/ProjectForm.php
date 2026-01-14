@@ -4,9 +4,7 @@ namespace App\Filament\Resources\Projects\Schemas;
 
 use App\Enums\JenisOrganization;
 use App\Enums\JenisProject;
-use App\Models\Tax;
 use Carbon\Carbon;
-use Dom\Text;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -16,9 +14,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Filament\Support\RawJs;
-
-use function Livewire\on;
 
 class ProjectForm
 {
@@ -36,7 +31,18 @@ class ProjectForm
                     ->options(JenisProject::class)
                     ->native(false)
                     ->columnSpanFull()
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function (Set $set, Get $get, JenisProject|string|null $state) {
+                        if ($state) {
+                            $jenis = $state instanceof JenisProject ? $state : JenisProject::from($state);
+                            $set('pph', $jenis->getPph());
+                            if (! $jenis->hasPpn()) {
+                                $set('ppn', 0);
+                            }
+                            self::updateCalculations($set, $get);
+                        }
+                    }),
                 Select::make('organization_id')
                     ->label('Instansi')
                     ->relationship('organizations', 'nama_organization')
@@ -91,8 +97,8 @@ class ProjectForm
                     ->columns(10)
                     ->columnSpanFull()
                     ->schema([
-                        TextInput::make('nilai_kontrak')
-                            ->label('Nilai Kontrak')
+                        TextInput::make('nilai_dpp')
+                            ->label('DPP')
                             ->prefix('Rp')
                             ->columnSpan(2)
                             ->live(onBlur: true)
@@ -108,8 +114,8 @@ class ProjectForm
                             ->maxWidth('sm')
                             ->numeric()
                             ->live(onBlur: true)
+                            ->hidden(fn (Get $get) => ($get('type') instanceof JenisProject && ! $get('type')->hasPpn()) || $get('type') === 'perorangan')
                             ->afterStateUpdated(fn (Set $set, Get $get) => self::updateCalculations($set, $get))
-                            ->default(fn () => Tax::first()?->ppn ?? 0)
                             ->suffix('%'),
 
                         TextInput::make('nilai_ppn')
@@ -118,7 +124,8 @@ class ProjectForm
                             ->dehydrated()
                             ->columnSpan(2)
                             ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', '.') : '0')
-                            ->prefix('Rp'),
+                            ->prefix('Rp')
+                            ->hidden(fn (Get $get) => ($get('type') instanceof JenisProject && ! $get('type')->hasPpn()) || $get('type') === 'perorangan'),
 
                         TextInput::make('pph')
                             ->label('PPH')
@@ -126,7 +133,6 @@ class ProjectForm
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Set $set, Get $get) => self::updateCalculations($set, $get))
                             ->numeric()
-                            ->default(fn () => Tax::first()?->pph ?? 0)
                             ->suffix('%'),
 
                         TextInput::make('nilai_pph')
@@ -136,11 +142,23 @@ class ProjectForm
                             ->columnSpan(2)
                             ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', '.') : '0')
                             ->prefix('Rp'),
-
-                        TextInput::make('nilai_dpp')
-                            ->label('DPP')
+                    ]),
+                Section::make('')
+                    ->columns(10)
+                    ->columnSpanFull()
+                    ->schema([
+                        TextInput::make('nilai_kontrak')
+                            ->label('Nilai Kontrak')
                             ->prefix('Rp')
-                            ->columnSpan(2)
+                            ->columnSpan(3)
+                            ->disabled()
+                            ->dehydrated()
+                            ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', '.') : '0'),
+
+                        TextInput::make('netto')
+                            ->label('Netto')
+                            ->prefix('Rp')
+                            ->columnSpan(3)
                             ->disabled()
                             ->dehydrated()
                             ->formatStateUsing(fn ($state) => $state ? number_format($state, 0, ',', '.') : '0'),
@@ -174,19 +192,25 @@ class ProjectForm
 
     protected static function updateCalculations(Set $set, Get $get): void
     {
-        $nilaiKontrak = (float) ($get('nilai_kontrak') ?? 0);
-        $ppnPersen = (float) ($get('ppn') ?? 0);
-        $pphPersen = (float) ($get('pph') ?? 0);
+        $dpp = (float) ($get('nilai_dpp') ?? 0);
+        $ppnRate = (float) ($get('ppn') ?? 0);
+        $pphRate = (float) ($get('pph') ?? 0);
 
+        // DPP × PPN% = Nilai PPN
+        $nilaiPpn = $dpp * ($ppnRate / 100);
 
-        $nilaiPpn = $nilaiKontrak * ($ppnPersen / 100);
+        // DPP + PPN = Nilai Kontrak
+        $nilaiKontrak = $dpp + $nilaiPpn;
 
-        $nilaiPph = $nilaiKontrak * ($pphPersen / 100);
+        // DPP × PPH% = Nilai PPH
+        $nilaiPph = $dpp * ($pphRate / 100);
 
-        $dpp = $nilaiKontrak - $nilaiPpn;
+        // Nilai Kontrak - PPN - PPH = Netto
+        $netto = $nilaiKontrak - $nilaiPpn - $nilaiPph;
 
-        $set('nilai_dpp', round($dpp, 2));
         $set('nilai_ppn', round($nilaiPpn, 2));
+        $set('nilai_kontrak', round($nilaiKontrak, 2));
         $set('nilai_pph', round($nilaiPph, 2));
+        $set('netto', round($netto, 2));
     }
 }

@@ -6,14 +6,15 @@ use App\Concerns\HasTahunAktif;
 use App\Concerns\HasUlids;
 use App\Enums\JenisProject;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
-    use HasUlids, SoftDeletes;
     use HasTahunAktif;
+    use HasUlids, SoftDeletes;
 
     protected $table = 'projects';
 
@@ -29,6 +30,7 @@ class Project extends Model
         'pph',
         'nilai_ppn',
         'nilai_pph',
+        'netto',
         'billing_ppn',
         'billing_pph',
         'ntpn_ppn',
@@ -45,7 +47,7 @@ class Project extends Model
         'type' => JenisProject::class,
     ];
 
-    public function organizations()
+    public function organizations(): BelongsTo
     {
         return $this->belongsTo(Organization::class, 'organization_id');
     }
@@ -55,11 +57,16 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_kontributor', 'project_id', 'kontributor_id');
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class, 'project_id');
+    }
+
     public function getProgressPercentageAttribute(): float
     {
         $documents = $this->documents;
 
-        if ($documents->isEmpty()) {
+        if ($documents === null || $documents->isEmpty()) {
             return 0;
         }
 
@@ -76,16 +83,33 @@ class Project extends Model
     {
         $documents = $this->documents;
 
-        if ($documents->isEmpty()) {
+        if ($documents === null || $documents->isEmpty()) {
             return false;
         }
 
         foreach ($documents as $document) {
-            if (!$document->is_complete) {
+            if (! $document->is_complete) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    public function getStatusBadgeAttribute(): array
+    {
+        $today = today();
+
+        if (! $this->end_date) {
+            return ['label' => 'Belum Ada', 'color' => 'gray'];
+        }
+
+        if ($this->end_date->isPast()) {
+            return $this->is_complete
+                ? ['label' => 'Selesai', 'color' => 'success']
+                : ['label' => 'Terlambat', 'color' => 'warning'];
+        }
+
+        return ['label' => 'Berlangsung', 'color' => 'info'];
     }
 }
