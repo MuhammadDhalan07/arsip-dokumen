@@ -13,8 +13,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Document extends Model implements HasMedia
 {
-    use HasUlids, SoftDeletes, InteractsWithMedia;
     use HasTahunAktif;
+    use HasUlids, InteractsWithMedia, SoftDeletes;
 
     protected $table = 'documents';
 
@@ -38,7 +38,7 @@ class Document extends Model implements HasMedia
         return $this->belongsTo(Project::class);
     }
 
-    public function rincians():BelongsToMany
+    public function rincians(): BelongsToMany
     {
         return $this->belongsToMany(Rincian::class, 'document_rincian', 'document_id', 'rincian_id');
     }
@@ -56,26 +56,19 @@ class Document extends Model implements HasMedia
             return 0;
         }
 
-        $totalBobot = 0;
-        $completedBobot = 0;
+        $totalRincian = $rincians->count();
+        $completedRincian = 0;
 
         foreach ($rincians as $rincian) {
-            $bobot = $rincian->bobot ?? 0;
-            $totalBobot += $bobot;
-
             $collectionName = Str::snake($rincian->name);
             $hasDocument = $this->getMedia($collectionName)->isNotEmpty();
 
             if ($hasDocument) {
-                $completedBobot += $bobot;
+                $completedRincian++;
             }
         }
 
-        if ($totalBobot == 0) {
-            return 0;
-        }
-
-        return round(($completedBobot / $totalBobot) * 100, 2);
+        return round(($completedRincian / $totalRincian) * 100, 2);
     }
 
     public function getIsCompleteAttribute(): bool
@@ -87,7 +80,7 @@ class Document extends Model implements HasMedia
     {
         $progress = $this->progress_percentage;
 
-        return match(true) {
+        return match (true) {
             $progress == 0 => 'Belum Mulai',
             $progress < 30 => 'Baru Dimulai',
             $progress < 70 => 'Dalam Progress',
@@ -100,7 +93,7 @@ class Document extends Model implements HasMedia
     {
         $progress = $this->progress_percentage;
 
-        return match(true) {
+        return match (true) {
             $progress == 0 => 'gray',
             $progress < 30 => 'red',
             $progress < 70 => 'yellow',

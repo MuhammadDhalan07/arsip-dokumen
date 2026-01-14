@@ -15,7 +15,6 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Schema;
@@ -43,7 +42,6 @@ class RincianResource extends Resource
     protected static ?string $slug = 'pendukung-rincian';
 
     protected static ?int $navigationSort = 2;
-
 
     public static function form(Schema $schema): Schema
     {
@@ -81,12 +79,11 @@ class RincianResource extends Resource
                         return new \Illuminate\Support\HtmlString(
                             "<div class='text-{$color}-600 font-medium'>
                                 Total bobot saat ini: {$totalBobot}%
-                                " . ($totalBobot == 100 ? '✓' : '⚠ Harus 100%') . "
-                            </div>"
+                                ".($totalBobot == 100 ? '✓' : '⚠ Harus 100%').'
+                            </div>'
                         );
                     }),
-            ])
-            ;
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -106,10 +103,10 @@ class RincianResource extends Resource
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('bobot')
-                    ->label('Bobot (%)')
-                    ->formatStateUsing(fn ($state) => "{$state}%")
-                    ->sortable(),
+                // TextColumn::make('bobot')
+                //     ->label('Bobot (%)')
+                //     ->formatStateUsing(fn ($state) => "{$state}%")
+                //     ->sortable(),
                 ToggleColumn::make('is_active')
                     ->label('Aktif')
                     ->sortable(),
